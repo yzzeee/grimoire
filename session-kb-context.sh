@@ -5,10 +5,15 @@
 # 매칭이 없으면 아무것도 출력하지 않아 노이즈를 만들지 않는다.
 set -euo pipefail
 
-CFG=/home/yzzeee/tools/mcp/grimoire/kb.config.json
-CTX=/home/yzzeee/tools/mcp/grimoire/bin/grimoire-context
-KB=/home/yzzeee/kb
+# 경로는 이 스크립트 위치에서 끌어온다. 하드코딩하면 다른 머신에서 조용히 안 돈다.
+HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+CFG="${GRIMOIRE_CONFIG:-$HERE/kb.config.json}"
+CTX="${GRIMOIRE_CONTEXT_BIN:-$HERE/bin/grimoire-context}"
+KB="${GRIMOIRE_KB:-$HOME/kb}"
 CWD="${1:-$PWD}"
+
+[ -x "$CTX" ] || exit 0
+[ -d "$KB" ] || exit 0
 
 # 1) jump 매핑 기반 (큐레이션)
 if OUT="$("$CTX" "$CFG" "$CWD" 2>/dev/null)" && [ -n "$OUT" ]; then
