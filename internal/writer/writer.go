@@ -31,6 +31,7 @@ type Request struct {
 	Status    string
 	Slug      string
 	Date      string
+	AIAccess  string
 	Overwrite bool
 }
 
@@ -150,6 +151,10 @@ func buildFilename(naming, slug, date string) string {
 	switch naming {
 	case "date-compact":
 		return strings.ReplaceAll(date, "-", "") + "-" + slug + ".md"
+	case "date-prefix":
+		// <YYYY-MM-DD>-<slug>.md. date-compact 와 달리 하이픈을 지우지 않는다.
+		// 이 case 가 없던 동안 date-prefix 는 default(kebab) 로 빠져 날짜가 붙지 않았다.
+		return date + "-" + slug + ".md"
 	case "date-done":
 		return date + "-" + slug + "-done.md"
 	default: // kebab, mixed, worklog(특수)·미지정 → kebab
@@ -261,7 +266,8 @@ func Write(c *config.Config, req Request, now time.Time) (*Result, error) {
 		tags = []string{meta.Domain}
 	}
 	status := firstNonEmpty(req.Status, c.Frontmatter.Defaults["status"], "active")
-	access := firstNonEmpty(meta.AIAccess, c.Frontmatter.Defaults["ai_access"], "shared")
+	// 요청이 ai_access 를 지정할 수 있다. 지정이 없으면 폴더 기본값 → 전역 기본값.
+	access := firstNonEmpty(req.AIAccess, meta.AIAccess, c.Frontmatter.Defaults["ai_access"], "shared")
 
 	abs := filepath.Join(c.KB.Root, rel)
 	if _, err := os.Stat(abs); err == nil && !req.Overwrite {
